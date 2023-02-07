@@ -1,5 +1,6 @@
 workspace "Kairon"
 	architecture "x64"
+	startproject "Sandbox"
 
 	configurations{
 		"Debug",
@@ -15,11 +16,12 @@ IncludeDir["GLFW"] = "Kairon/vendor/GLFW/include"
 IncludeDir["Glad"] = "Kairon/vendor/Glad/include"
 IncludeDir["ImGui"] = "Kairon/vendor/imgui"
 
-include "Kairon/vendor/GLFW"
-include "Kairon/vendor/Glad"
-include "Kairon/vendor/imgui"
+group "Dependencies"
+	include "Kairon/vendor/GLFW"
+	include "Kairon/vendor/Glad"
+	include "Kairon/vendor/imgui"
 
-startproject "Sandbox"
+group ""
 
 project "Kairon"
 	location "Kairon"
@@ -64,7 +66,7 @@ project "Kairon"
 		}
 
 		postbuildcommands{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
+			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
 		}
 
 	filter "configurations:Debug"

@@ -5,11 +5,16 @@ public:
 	ExampleLayer() : Layer("Example") {}
 
 	void OnUpdate() override {
-		KR_INFO("ExampleLayer::Update");
+
+		if (Kairon::Input::IsKeyPressed(KR_KEY_TAB))
+			KR_TRACE("Tab key is pressed!");
 	}
 
 	void OnEvent(Kairon::Event& event) override {
-		KR_TRACE("{0}", event);
+		if (event.GetEventType() == Kairon::EventType::KeyPressed) {
+			Kairon::KeyPressedEvent& e = (Kairon::KeyPressedEvent&)event;
+			KR_TRACE("{0}", (char)e.GetKeyCode());
+		}
 	}
 };
 

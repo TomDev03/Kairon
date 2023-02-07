@@ -225,7 +225,7 @@ namespace Kairon {
         ImGuiIO& io = ImGui::GetIO();
         io.AddKeyEvent(ImGui_KeyToImGuiKey(e.GetKeyCode()), GLFW_PRESS);
 
-        GLFWwindow* win = (GLFWwindow*)Application::Get().GetWindow().GetGLFWWindow();
+        auto win = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 
         io.AddKeyEvent(ImGuiMod_Ctrl, (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) || (glfwGetKey(win, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS));
         io.AddKeyEvent(ImGuiMod_Shift, (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) || (glfwGetKey(win, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS));

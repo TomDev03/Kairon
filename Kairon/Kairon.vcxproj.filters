@@ -46,6 +46,9 @@
     <ClInclude Include="src\Kairon\ImGui\ImGuiLayer.h">
       <Filter>Kairon\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Kairon\Input.h">
+      <Filter>Kairon</Filter>
+    </ClInclude>
     <ClInclude Include="src\Kairon\Layer.h">
       <Filter>Kairon</Filter>
     </ClInclude>
@@ -64,10 +67,15 @@
     <ClInclude Include="src\Platform\OpenGL\imgui_impl_opengl3_loader.h">
       <Filter>Platform\OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h">
+      <Filter>Platform\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h">
       <Filter>Platform\Windows</Filter>
     </ClInclude>
     <ClInclude Include="src\hzpch.h" />
+    <ClInclude Include="src\Kairon\KeyCodes.h" />
+    <ClInclude Include="src\Kairon\MouseButtonCodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Kairon\Application.cpp">
@@ -87,6 +95,9 @@
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
       <Filter>Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
+      <Filter>Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>Platform\Windows</Filter>
