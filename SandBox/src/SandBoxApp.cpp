@@ -17,6 +17,7 @@ class SandBox : public Kairon::Application {
 public:
 	SandBox() {
 		PushLayer(new ExampleLayer());
+		PushOverlay(new Kairon::ImGuiLayer());
 	}
 	~SandBox() {
 	

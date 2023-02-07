@@ -13,16 +13,19 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "Kairon/vendor/GLFW/include"
 IncludeDir["Glad"] = "Kairon/vendor/Glad/include"
-IncludeDir["ImGui"] = "Kairon/vendor/ImGui/include"
+IncludeDir["ImGui"] = "Kairon/vendor/imgui"
 
 include "Kairon/vendor/GLFW"
 include "Kairon/vendor/Glad"
 include "Kairon/vendor/imgui"
 
+startproject "Sandbox"
+
 project "Kairon"
 	location "Kairon"
 	kind "SharedLib"
 	language "C++"
+	staticruntime "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -52,7 +55,6 @@ project "Kairon"
 
 	 filter "system:windows"
 		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 		defines{
@@ -67,22 +69,24 @@ project "Kairon"
 
 	filter "configurations:Debug"
 		defines "KR_DEBUG"
-		buildoptions "/MDd"
+		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "KR_RELEASE"
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "KR_DIST"
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
+	language "C++"
+	staticruntime "off"
 
 	language "C++"
 
@@ -105,7 +109,6 @@ project "Sandbox"
 
 	 filter "system:windows"
 		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 		defines{
@@ -114,15 +117,15 @@ project "Sandbox"
 
 	filter "configurations:Debug"
 		defines "KR_DEBUG"
-		buildoptions "/MDd"
+		runtime "Debug"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines "KR_RELEASE"
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"
 
 	filter "configurations:Dist"
 		defines "KR_DIST"
-		buildoptions "/MD"
+		runtime "Release"
 		optimize "On"

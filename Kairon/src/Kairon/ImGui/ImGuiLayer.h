@@ -1,0 +1,32 @@
+#pragma once
+
+#include "Kairon/Layer.h"
+
+#include "Kairon/Events/ApplicationEvent.h"
+#include "Kairon/Events/KeyEvent.h"
+#include "Kairon/Events/MouseEvent.h"
+
+namespace Kairon {
+
+	class KAIRON_API ImGuiLayer : public Layer {
+	public:
+		ImGuiLayer();
+		~ImGuiLayer();
+
+		void OnAttach();
+		void OnDetach();
+		void OnUpdate();
+		void OnEvent(Event& event);
+	private:
+		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
+		bool OnMouseButtonReleadesEvent(MouseButtonReleasedEvent& e);
+		bool OnMouseMovedEvent(MouseMovedEvent& e);
+		bool OnMouseScrolledEvent(MouseScrolledEvent& e);
+		bool OnKeyPressedEvent(KeyPressedEvent& e);
+		bool OnKeyReleasedEvent(KeyReleasedEvent& e);
+		bool OnKeyTypedEvent(KeyTypedEvent& e);
+		bool OnWindowResizedEvent(WindowResizeEvent& e);
+	private:
+		float m_Time = 0.0f;
+	};
+}

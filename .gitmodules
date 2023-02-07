@@ -4,3 +4,6 @@
 [submodule "Kairon/vendor/GLFW"]
 	path = Kairon/vendor/GLFW
 	url = https://github.com/TheCherno/GLFW
+[submodule "Kairon/vendor/imgui"]
+	path = Kairon/vendor/imgui
+	url = https://github.com/TheCherno/imgui
