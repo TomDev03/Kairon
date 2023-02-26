@@ -15,6 +15,7 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Kairon/vendor/GLFW/include"
 IncludeDir["Glad"] = "Kairon/vendor/Glad/include"
 IncludeDir["ImGui"] = "Kairon/vendor/imgui"
+IncludeDir["glm"] = "Kairon/vendor/glm"
 
 group "Dependencies"
 	include "Kairon/vendor/GLFW"
@@ -25,9 +26,10 @@ group ""
 
 project "Kairon"
 	location "Kairon"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
-	staticruntime "off"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -45,7 +47,8 @@ project "Kairon"
 		"%{prj.name}/vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
-		"%{IncludeDir.ImGui}"
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}"
 	}
 
 	links{
@@ -56,7 +59,6 @@ project "Kairon"
 	}
 
 	 filter "system:windows"
-		cppdialect "C++17"
 		systemversion "latest"
 
 		defines{
@@ -65,32 +67,27 @@ project "Kairon"
 			"GLFW_INCLUDE_NONE"
 		}
 
-		postbuildcommands{
-			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
-		}
-
 	filter "configurations:Debug"
 		defines "KR_DEBUG"
 		runtime "Debug"
-		symbols "On"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "KR_RELEASE"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "KR_DIST"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
-	staticruntime "off"
-
-	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -102,7 +99,9 @@ project "Sandbox"
 
 	includedirs{
 		"Kairon/vendor/spdlog/include",
-		"Kairon/src"
+		"Kairon/src",
+		"Kairon/vendor",
+		"%{IncludeDir.glm}"
 	}
 
 	links{
@@ -110,7 +109,6 @@ project "Sandbox"
 	}
 
 	 filter "system:windows"
-		cppdialect "C++17"
 		systemversion "latest"
 
 		defines{
@@ -120,14 +118,14 @@ project "Sandbox"
 	filter "configurations:Debug"
 		defines "KR_DEBUG"
 		runtime "Debug"
-		symbols "On"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "KR_RELEASE"
 		runtime "Release"
-		optimize "On"
+		optimize "on"
 
 	filter "configurations:Dist"
 		defines "KR_DIST"
 		runtime "Release"
-		optimize "On"
+		optimize "on"

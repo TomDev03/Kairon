@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Kairon/Window.h"
+#include "Kairon/Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
 
@@ -26,6 +27,7 @@ namespace Kairon {
 		virtual void Shutdown();
 
 		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
 
 		struct WindowData {
 			std::string Title;

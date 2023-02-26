@@ -1,11 +1,15 @@
 #pragma once
 
 #ifdef KR_PLATFORM_WINDOWS
+#if KR_DYNAMIC_LINK
 	#ifdef KR_BUILD_DLL
 		#define KAIRON_API __declspec(dllexport)
 	#else
 		#define KAIRON_API __declspec(dllimport)
 	#endif // KR_BUILD_DLL
+#else
+	#define KAIRON_API
+#endif
 #else
 	#error Kairon only support windows
 #endif // KR_PLATFORM_WINDOWS

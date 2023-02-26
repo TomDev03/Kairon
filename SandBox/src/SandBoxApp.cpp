@@ -1,13 +1,21 @@
 #include <Kairon.h>
 
+#include "imgui/imgui.h"
+
 class ExampleLayer : public Kairon::Layer {
 public:
 	ExampleLayer() : Layer("Example") {}
 
-	void OnUpdate() override {
-
+	void OnUpdate() override
+	{
 		if (Kairon::Input::IsKeyPressed(KR_KEY_TAB))
-			KR_TRACE("Tab key is pressed!");
+			KR_TRACE("Tab key is pressed (poll)!");
+	}
+
+	virtual void OnImGuiRender() override {
+		ImGui::Begin("Test");
+		ImGui::Text("Hello World");
+		ImGui::End();
 	}
 
 	void OnEvent(Kairon::Event& event) override {
@@ -22,7 +30,6 @@ class SandBox : public Kairon::Application {
 public:
 	SandBox() {
 		PushLayer(new ExampleLayer());
-		PushOverlay(new Kairon::ImGuiLayer());
 	}
 	~SandBox() {
 	

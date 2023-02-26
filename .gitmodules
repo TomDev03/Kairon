@@ -7,3 +7,6 @@
 [submodule "Kairon/vendor/imgui"]
 	path = Kairon/vendor/imgui
 	url = https://github.com/TheCherno/imgui
+[submodule "Kairon/vendor/glm"]
+	path = Kairon/vendor/glm
+	url = https://github.com/g-truc/glm
