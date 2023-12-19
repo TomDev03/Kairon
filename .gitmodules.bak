@@ -1,6 +1,0 @@
-[submodule "Kairon/vendor/spdlog"]
-	path = Kairon/vendor/spdlog
-	url = https://github.com/gabime/spdlog
-[submodule "Kairon/vendor/GLFW"]
-	path = Kairon/vendor/GLFW
-	url = https://github.com/TheCherno/GLFW
