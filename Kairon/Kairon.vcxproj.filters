@@ -10,8 +10,14 @@
     <Filter Include="Kairon\ImGui">
       <UniqueIdentifier>{3384E9B6-1FE7-785B-C86C-B111B4AE44DE}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Kairon\Renderer">
+      <UniqueIdentifier>{0FE20A43-7B6D-7807-847E-FBFBF088D407}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Platform">
       <UniqueIdentifier>{2AC788B4-1694-E3BF-3FAD-D1672BD9184E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\OpenGL">
+      <UniqueIdentifier>{1E7D2C1D-8A08-9AE1-9319-1DD6FF23F6E1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Platform\Windows">
       <UniqueIdentifier>{64FBD71A-50F4-F66C-7926-DCF1657ED678}</UniqueIdentifier>
@@ -61,8 +67,26 @@
     <ClInclude Include="src\Kairon\MouseButtonCodes.h">
       <Filter>Kairon</Filter>
     </ClInclude>
+    <ClInclude Include="src\Kairon\Renderer\Buffer.h">
+      <Filter>Kairon\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kairon\Renderer\GraphicsContext.h">
+      <Filter>Kairon\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kairon\Renderer\Renderer.h">
+      <Filter>Kairon\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kairon\Renderer\Shader.h">
+      <Filter>Kairon\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Kairon\Window.h">
       <Filter>Kairon</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
+      <Filter>Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
+      <Filter>Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
       <Filter>Platform\Windows</Filter>
@@ -71,8 +95,6 @@
       <Filter>Platform\Windows</Filter>
     </ClInclude>
     <ClInclude Include="src\hzpch.h" />
-    <ClInclude Include="src\Kairon\Renderer\GraphicsContext.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Kairon\Application.cpp">
@@ -93,6 +115,21 @@
     <ClCompile Include="src\Kairon\Log.cpp">
       <Filter>Kairon</Filter>
     </ClCompile>
+    <ClCompile Include="src\Kairon\Renderer\Buffer.cpp">
+      <Filter>Kairon\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kairon\Renderer\Renderer.cpp">
+      <Filter>Kairon\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kairon\Renderer\Shader.cpp">
+      <Filter>Kairon\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
+      <Filter>Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
+      <Filter>Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
       <Filter>Platform\Windows</Filter>
     </ClCompile>
@@ -100,6 +137,5 @@
       <Filter>Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\hzpch.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
   </ItemGroup>
 </Project>

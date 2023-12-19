@@ -18,6 +18,11 @@ namespace Kairon {
 		glfwMakeContextCurrent(m_WindowHandle);
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		KR_CORE_ASSERT(status, "Failed to initialize Glad!");
+
+		KR_CORE_INFO("OpenGL Info:");
+		KR_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
+		KR_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
+		KR_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
 	}
 
 	void OpenGLContext::SwapBuffers()
