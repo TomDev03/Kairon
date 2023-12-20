@@ -1,6 +1,7 @@
 # Directories
 .vs/
 kairon/target/
+.DS_Store
 
 # Files
 *.user
