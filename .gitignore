@@ -1,6 +1,6 @@
 # Directories
 .vs/
-kairon/target/
+target/
 .DS_Store
 
 # Files
