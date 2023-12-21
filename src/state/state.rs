@@ -1,10 +1,6 @@
-use std::io::SeekFrom;
-
 use log::{error, info};
 use wgpu::StoreOp;
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
-
-use crate::window_handler::state;
 
 pub(crate) struct State {
     surface: wgpu::Surface,
