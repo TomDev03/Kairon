@@ -1,0 +1,1 @@
+https://sotrh.github.io/learn-wgpu/beginner/tutorial2-surface/#wait-what-s-going-on-with-renderpassdescriptor
