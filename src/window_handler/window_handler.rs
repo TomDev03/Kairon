@@ -70,6 +70,9 @@ pub async fn run() {
                     }
                 }
             },
+            Event::AboutToWait => {
+                //state.window().request_redraw();
+            }
             _ => (),
         }
     }) {

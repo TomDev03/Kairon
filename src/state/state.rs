@@ -1,6 +1,10 @@
-use log::error;
+use std::io::SeekFrom;
+
+use log::{error, info};
 use wgpu::StoreOp;
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
+
+use crate::window_handler::state;
 
 pub(crate) struct State {
     surface: wgpu::Surface,
@@ -8,7 +12,7 @@ pub(crate) struct State {
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
-
+    clear_color: wgpu::Color,
     window: Window,
 }
 
@@ -83,12 +87,15 @@ impl State {
 
         surface.configure(&device, &surface_config);
 
+        let clear_color = wgpu::Color::BLACK;
+
         Self {
             surface,
             device,
             queue,
             config: surface_config,
             size,
+            clear_color,
             window,
         }
     }
@@ -117,24 +124,21 @@ impl State {
             WindowEvent::KeyboardInput { event, .. } => {
                 if event.state == winit::event::ElementState::Pressed {
                     if event.physical_key == KeyCode::Escape {
-                        WindowEvent::CloseRequested;
+                        drop(WindowEvent::CloseRequested);
                         return true;
                     }
                 }
                 false
             }
             WindowEvent::CursorMoved { position, .. } => {
-                if self.window.cursor_grabbed() {
-                    let delta = winit::dpi::PhysicalPosition::new(
-                        position.x - self.size.width as f64 / 2.0,
-                        position.y - self.size.height as f64 / 2.0,
-                    );
-                    self.window
-                        .set_cursor_position(winit::dpi::PhysicalPosition::new(
-                            self.size.width as f64 / 2.0,
-                            self.size.height as f64 / 2.0,
-                        ));
-                }
+                info!("Mouse moved to {:?}", position);
+                self.clear_color = wgpu::Color {
+                    r: position.x / self.size.width as f64,
+                    g: position.y / self.size.height as f64,
+                    b: 1.0,
+                    a: 1.0,
+                };
+                self.window.request_redraw();
                 true
             }
             _ => false,
@@ -161,12 +165,7 @@ impl State {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
-                            a: 1.0,
-                        }),
+                        load: wgpu::LoadOp::Clear(self.clear_color),
                         store: StoreOp::Store,
                     },
                 })],
