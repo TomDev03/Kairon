@@ -1,1 +1,9 @@
 https://sotrh.github.io/learn-wgpu/beginner/tutorial2-surface/#wait-what-s-going-on-with-renderpassdescriptor
+
+For GUI
+https://crates.io/crates/egui/0.24.1
+https://crates.io/crates/egui-winit/0.24.1
+https://crates.io/crates/egui-wgpu/0.24.1
+https://crates.io/crates/eframe/0.24.1
+https://github.com/emilk/egui/blob/master/examples
+https://github.com/hasenbanck/egui_example
