@@ -62,9 +62,8 @@ pub async fn run() {
                         WindowEvent::Resized(resized) => {
                             state.resize(*resized);
                         }
-                        WindowEvent::ScaleFactorChanged { inner_size_writer, .. } => {
-                            //state.resize(*inner_size_writer);
-                            todo!()
+                        WindowEvent::ScaleFactorChanged { scale_factor, inner_size_writer, .. } => {
+                            // TODO: Handle this error better
                         }
                         _ => (),
                     }
