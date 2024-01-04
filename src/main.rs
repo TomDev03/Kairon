@@ -9,23 +9,87 @@ struct Content {
     text: String,
 }
 
+impl Content {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Start with the default fonts (we will be adding to them rather than replacing them).
+        let mut fonts = egui::FontDefinitions::default();
+
+        // Install my own font (maybe supporting non-latin characters).
+        // .ttf and .otf files supported.
+        fonts.font_data.insert(
+            "my_font".to_owned(),
+            egui::FontData::from_static(include_bytes!("./fonts/Hack-Regular.ttf")),
+        );
+
+        // Put my font first (highest priority) for proportional text:
+        fonts
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_default()
+            .insert(0, "my_font".to_owned());
+
+        // Put my font as last fallback for monospace:
+        fonts
+            .families
+            .entry(egui::FontFamily::Monospace)
+            .or_default()
+            .push("my_font".to_owned());
+
+        // Tell egui to use these fonts:
+        (&cc.egui_ctx).set_fonts(fonts);
+
+        Self {
+            text: String::new(),
+        }
+    }
+}
+
 impl eframe::App for Content {
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         egui::Rgba::TRANSPARENT.to_array()
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        custom_window_frame(self, ctx, "egui with custom frame", |ui| {
-            ui.label("This is just the contents of the window.");
-            ui.horizontal(|ui| {
-                ui.label("egui theme:");
-                egui::widgets::global_dark_light_mode_buttons(ui);
-            });
+        custom_window_frame(ctx, "egui with custom frame", |ui| {
+            ScrollArea::vertical()
+                .auto_shrink(false)
+                .stick_to_bottom(true)
+                .show(ui, |ui| {
+                    ui.label("This is just the contents of the window.");
+                    ui.horizontal(|ui| {
+                        ui.label("egui theme:");
+                        egui::widgets::global_dark_light_mode_buttons(ui);
+                    });
+
+                    ui.heading("Press/Hold/Release example. Press A to test.");
+
+                    if ui.button("Clear").clicked() {
+                        self.text.clear();
+                    }
+
+                    ScrollArea::vertical()
+                        .auto_shrink(false)
+                        .stick_to_bottom(true)
+                        .show(ui, |ui| {
+                            ui.label(&self.text);
+                        });
+
+                    if ctx.input(|i| i.key_pressed(Key::A)) {
+                        self.text.push_str("\nPressed");
+                    }
+                    if ctx.input(|i| i.key_down(Key::A)) {
+                        self.text.push_str("\nHeld");
+                        ui.ctx().request_repaint(); // make sure we note the holding.
+                    }
+                    if ctx.input(|i| i.key_released(Key::A)) {
+                        self.text.push_str("\nReleased");
+                    }
+                });
         });
     }
 }
 
-fn custom_window_frame(object: &mut Content, ctx: &egui::Context, title: &str, add_contents: impl FnOnce(&mut Ui)) {
+fn custom_window_frame(ctx: &egui::Context, title: &str, add_contents: impl FnOnce(&mut Ui)) {
     let panel_frame = egui::Frame {
         fill: ctx.style().visuals.window_fill(),
         rounding: 10.0.into(),
@@ -56,28 +120,6 @@ fn custom_window_frame(object: &mut Content, ctx: &egui::Context, title: &str, a
 
         let mut content_ui = ui.child_ui(content_rect, *ui.layout());
         add_contents(&mut content_ui);
-
-        ui.heading("Press/Hold/Release example. Press A to test.");
-        if ui.button("Clear").clicked() {
-            object.text.clear();
-        }
-        ScrollArea::vertical()
-            .auto_shrink(false)
-            .stick_to_bottom(true)
-            .show(ui, |ui| {
-                ui.label(&object.text);
-            });
-
-        if ctx.input(|i| i.key_pressed(Key::A)) {
-            object.text.push_str("\nPressed");
-        }
-        if ctx.input(|i| i.key_down(Key::A)) {
-            object.text.push_str("\nHeld");
-            ui.ctx().request_repaint(); // make sure we note the holding.
-        }
-        if ctx.input(|i| i.key_released(Key::A)) {
-            object.text.push_str("\nReleased");
-        }
     });
 }
 
@@ -110,6 +152,21 @@ fn title_bar_ui(ui: &mut Ui, title_bar_rect: Rect, title: &str) {
         ui.ctx()
             .send_viewport_cmd(ViewportCommand::Maximized(!is_maximized));
     } else if title_bar_response.is_pointer_button_down_on() {
+        let is_maximized = ui.input(|i| i.viewport().maximized.unwrap_or(false));
+
+        if is_maximized {
+            ui.ctx()
+                .send_viewport_cmd(ViewportCommand::Maximized(false));
+            // put the window where the mouse is
+            let cursor_pos = ui.input(|ui| ui.pointer.interact_pos());
+            let cursor_pos = cursor_pos.unwrap_or_default();
+            let pointer_pos = title_bar_response.interact_pointer_pos().unwrap_or_default();
+            // Get outer position of the window
+            let outer_position = ui.ctx().input(|ui| ui.screen_rect());
+            let pos = Pos2::new(cursor_pos.x - outer_position.min.x, cursor_pos.y - outer_position.min.y);
+            ui.ctx().send_viewport_cmd(ViewportCommand::OuterPosition(pos));
+        }
+
         ui.ctx().send_viewport_cmd(ViewportCommand::StartDrag)
     }
 
@@ -156,7 +213,7 @@ fn close_maximize_minimize_buttons(ui: &mut egui::Ui) {
     }
 
     let minimized_response = ui
-        .add(Button::new(RichText::new("🗕").size(button_height)))
+        .add(Button::new(RichText::new("➖").size(button_height)))
         .on_hover_text("Minimize window");
     if minimized_response.clicked() {
         ui.ctx()
@@ -171,10 +228,9 @@ fn main() {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_decorations(false)
-            .with_inner_size([400.0, 100.0])
-            .with_min_inner_size([400.0, 100.0])
+            .with_inner_size([1024.0, 720.0])
+            .with_min_inner_size([680.0, 360.0])
             .with_transparent(false),
-
         ..Default::default()
     };
 
