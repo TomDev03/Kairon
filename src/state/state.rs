@@ -1,5 +1,7 @@
 use log::{error, info};
 use wgpu::StoreOp;
+use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
+use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
 pub(crate) struct State {
@@ -15,6 +17,7 @@ pub(crate) struct State {
 impl State {
     pub async fn new(window: Window) -> Self {
         let size = window.inner_size();
+        
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
         let surface = match unsafe { instance.create_surface(&window) } {
