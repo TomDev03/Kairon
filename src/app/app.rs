@@ -1,20 +1,22 @@
+#[path = "../gui/gui.rs"]
+mod gui;
+
 use log::{error, info};
 use wgpu::StoreOp;
-use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
-use egui_winit_platform::{Platform, PlatformDescriptor};
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
-pub(crate) struct State {
+pub(crate) struct App {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     clear_color: wgpu::Color,
+    gui: gui::GUI,
     window: Window,
 }
 
-impl State {
+impl App {
     pub async fn new(window: Window) -> Self {
         let size = window.inner_size();
         
@@ -86,6 +88,8 @@ impl State {
 
         surface.configure(&device, &surface_config);
 
+        let gui = gui::GUI::new( window.scale_factor(), size.width, size.height);
+
         let clear_color = wgpu::Color::BLACK;
 
         Self {
@@ -95,6 +99,7 @@ impl State {
             config: surface_config,
             size,
             clear_color,
+            gui,
             window,
         }
     }
@@ -107,6 +112,10 @@ impl State {
         self.size
     }
 
+    pub fn get_gui(&mut self) -> &mut gui::GUI {
+        &mut self.gui
+    }
+
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
@@ -116,6 +125,10 @@ impl State {
 
             self.window.request_redraw();
         }
+    }
+
+    pub fn scale_factor_changed(&mut self, scale_factor: f64) {
+        self.gui.set_scale_factor(scale_factor as f64);
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {

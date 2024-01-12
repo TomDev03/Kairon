@@ -1,39 +1,42 @@
-#[path = "../state/state.rs"]
-mod state;
+#[path = "../app/app.rs"]
+mod app;
 
-use ::egui::FontDefinitions;
-use chrono::Timelike;
 use log::{error, info};
-use std::iter;
-use std::time::Instant;
 use winit::event::{Event, WindowEvent};
-use winit::event_loop::ControlFlow;
+use winit::event_loop::{ControlFlow, EventLoop};
 use winit::{keyboard::KeyCode, window::WindowBuilder};
 
-const INITIAL_WIDTH: u32 = 1920;
-const INITIAL_HEIGHT: u32 = 1080;
+const INITIAL_WIDTH: u32 = 1280;
+const INITIAL_HEIGHT: u32 = 720;
 
 /*
-struct ExampleRepaintSignal(std::sync::Mutex<winit::event_loop::EventLoopProxy<winit::event::Event>>);
+enum CustomEvent {
+    RequestRedraw
+}
+
+struct ExampleRepaintSignal(std::sync::Mutex<winit::event_loop::EventLoopProxy<CustomEvent>>);
 
 impl epi::backend::RepaintSignal for ExampleRepaintSignal {
     fn request_repaint(&self) {
-        self.0.lock().unwrap().send_event(Event::RequestRedraw).ok();
+        self.0.lock().unwrap().send_event(CustomEvent::RequestRedraw).ok();
     }
 }
 */
 
+
 pub async fn run() {
     env_logger::init(); // Necessary for logging within WGPU
 
-    let event_loop = winit::event_loop::EventLoopBuilder::<()>::with_user_event().build().unwrap();
+    let event_loop = winit::event_loop::EventLoopBuilder::<()>::with_user_event()
+        .build()
+        .unwrap();
 
     let window = WindowBuilder::new()
         .with_decorations(true)
         .with_resizable(true)
         .with_transparent(false)
         .with_title("egui-wgpu")
-        .with_inner_size(winit::dpi::PhysicalSize{
+        .with_inner_size(winit::dpi::PhysicalSize {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
         })
@@ -43,22 +46,24 @@ pub async fn run() {
     // Opens the window and starts processing events (although no events are handled yet)
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut state = state::State::new(window).await;
+    let mut app: app::App = app::App::new(window).await;
 
     match event_loop.run(move |event, elwt| {
+        app.get_gui().handle_event(&event);
+        
         match event {
             Event::WindowEvent {
                 ref event,
                 window_id,
-            } if window_id == state.window().id() => {
-                if !state.input(event) {
+            } if window_id == app.window().id() => {
+                if !app.input(event) {
                     match event {
                         WindowEvent::RedrawRequested => {
-                            state.update();
-                            match state.render() {
+                            app.update();
+                            match app.render() {
                                 Ok(_) => (),
                                 // Reconfigure the surface if lost
-                                Err(wgpu::SurfaceError::Lost) => state.resize(state.get_size()),
+                                Err(wgpu::SurfaceError::Lost) => app.resize(app.get_size()),
                                 // The system is out of memory, we should probably quit
                                 Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
                                 // All other errors (Outdated, Timeout) should be resolved by the next frame
@@ -72,21 +77,18 @@ pub async fn run() {
                             }
                         }
                         WindowEvent::Resized(resized) => {
-                            state.resize(*resized);
+                            app.resize(*resized);
                         }
-                        WindowEvent::ScaleFactorChanged {
-                            scale_factor,
-                            inner_size_writer,
-                            ..
-                        } => {
+                        WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                             // TODO: Handle this error better
+                            app.scale_factor_changed(*scale_factor);
                         }
                         _ => (),
                     }
                 }
             }
             Event::AboutToWait => {
-                //state.window().request_redraw();
+                //app.window().request_redraw();
             }
             _ => (),
         }
