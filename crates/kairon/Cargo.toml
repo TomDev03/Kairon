@@ -14,3 +14,4 @@ path = "src/main.rs"
 
 [dependencies]
 window_handler.workspace = true
+pollster.workspace = true

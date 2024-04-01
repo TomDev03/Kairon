@@ -3,6 +3,7 @@ use app;
 use log::{error, info};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
+use winit::window::Window;
 use winit::{keyboard::KeyCode, window::WindowBuilder};
 
 

@@ -1,8 +1,11 @@
+use std::rc::Rc;
+use std::{cell::RefCell, ops::Deref};
+
 use ui;
 
 use egui_wgpu_backend::RenderPass;
 use log::{error, info};
-use wgpu::{StoreOp, SurfaceTarget};
+use wgpu::{hal::metal::Surface, rwh::HasWindowHandle, StoreOp, SurfaceTarget};
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
 pub const INITIAL_WIDTH: u32 = 1280;
@@ -16,23 +19,27 @@ pub struct App {
     size: winit::dpi::PhysicalSize<u32>,
     clear_color: wgpu::Color,
     ui: ui::UI,
-    window: &'static Window,
+    window: Window,
 }
 
 impl App {
-    pub async fn new(window: &'static Window) -> Self {
+    pub async fn new(window: Window) -> Self {
         let size = window.inner_size();
+        let scale_factor = window.scale_factor();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
-        let surface = match instance.create_surface(window) {
-            Ok(s) => s,
-            Err(e) => {
-                // TODO: Handle this error better
-                // check CreateSurfaceError enum for more info on how to handle the multiple errors more specifically
-                error!("Failed to create surface: {}", e);
-                panic!("Failed to start application");
-            }
-        };
+        let surface;
+        {
+            surface = match instance.create_surface(window) {
+                Ok(s) => s,
+                Err(e) => {
+                    // TODO: Handle this error better
+                    // check CreateSurfaceError enum for more info on how to handle the multiple errors more specifically
+                    error!("Failed to create surface: {}", e);
+                    panic!("Failed to start application");
+                }
+            };
+        }
 
         let adapter = match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -91,7 +98,11 @@ impl App {
 
         surface.configure(&device, &surface_config);
 
-        let ui = ui::UI::new(window.scale_factor(), size.width, size.height);
+        let ui = ui::UI::new(
+            scale_factor,
+            size.width,
+            size.height,
+        );
 
         let clear_color = wgpu::Color::BLACK;
 
@@ -163,10 +174,10 @@ impl App {
     pub fn update(&mut self) {}
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        let mut egui_rpass: RenderPass = RenderPass::new(&self.device, self.config.format, 1);
+        let egui_rpass: RenderPass = RenderPass::new(&self.device, self.config.format, 1);
 
         self.ui.ui(
-            self.window,
+            &self.window,
             &self.device,
             &self.queue,
             &self.surface,
