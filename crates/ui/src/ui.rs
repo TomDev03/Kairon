@@ -48,8 +48,8 @@ impl UI {
         &mut self,
         window: &Window,
         device: &Device,
-        queue: Queue,
-        surface: Surface,
+        queue: &Queue,
+        surface: &Surface,
         mut render_pass: RenderPass,
         surface_config: &SurfaceConfiguration,
     ) {

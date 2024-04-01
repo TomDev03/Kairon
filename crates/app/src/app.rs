@@ -5,10 +5,10 @@ use log::{error, info};
 use wgpu::{StoreOp, SurfaceTarget};
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
-const INITIAL_WIDTH: u32 = 1280;
-const INITIAL_HEIGHT: u32 = 720;
+pub const INITIAL_WIDTH: u32 = 1280;
+pub const INITIAL_HEIGHT: u32 = 720;
 
-pub(crate) struct App {
+pub struct App {
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -24,7 +24,7 @@ impl App {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
-        let surface = match unsafe { instance.create_surface(window) } {
+        let surface = match instance.create_surface(window) {
             Ok(s) => s,
             Err(e) => {
                 // TODO: Handle this error better
@@ -168,8 +168,8 @@ impl App {
         self.ui.ui(
             self.window,
             &self.device,
-            self.queue,
-            self.surface,
+            &self.queue,
+            &self.surface,
             egui_rpass,
             &mut self.config,
         );
