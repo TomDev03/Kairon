@@ -1,0 +1,20 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "app"
+path = "src/app.rs"
+
+[dependencies]
+chrono.workspace = true
+ui.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+egui_wgpu_backend.workspace = true
+log.workspace = true
+
+[features]
+default = []

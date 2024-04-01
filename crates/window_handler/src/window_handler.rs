@@ -1,13 +1,10 @@
-#[path = "../app/app.rs"]
-mod app;
+use app;
 
 use log::{error, info};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::{keyboard::KeyCode, window::WindowBuilder};
 
-const INITIAL_WIDTH: u32 = 1280;
-const INITIAL_HEIGHT: u32 = 720;
 
 /*
 enum CustomEvent {
@@ -22,7 +19,6 @@ impl epi::backend::RepaintSignal for ExampleRepaintSignal {
     }
 }
 */
-
 
 pub async fn run() {
     env_logger::init(); // Necessary for logging within WGPU
@@ -50,7 +46,7 @@ pub async fn run() {
 
     match event_loop.run(move |event, elwt| {
         app.get_gui().handle_event(&event);
-        
+
         match event {
             Event::WindowEvent {
                 ref event,

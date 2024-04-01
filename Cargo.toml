@@ -1,18 +1,24 @@
-[package]
-name = "kairon"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = ["crates/app", "crates/ui", "crates/window_handler", "crates/kairon"]
+default-members = ["crates/kairon"]
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-egui_wgpu_backend = "0.27.0"
-egui = "0.25.0"
+[workspace.dependencies]
+kairon = { path = "crates/kairon" }
+app = { path = "crates/app" }
+ui = { path = "crates/ui" }
+window_handler = { path = "crates/window_handler" }
+winit = "0.29.4"
+egui = "0.26.2"
+wgpu = "0.19.3"
+egui_winit_platform = "0.21.0"
+egui_wgpu_backend = "0.28.0"
+#egui-winit = "0.26.2"
+egui-wgpu = "0.26.2"
 epi = "0.17.0"
-#egui_winit_platform = "0.20.0"
-wgpu = "0.18.0"
-winit = { version = "0.29.4", features = ["rwh_05"] }
-egui_demo_lib = "0.24.0"
+egui_demo_lib = "0.26.2"
 cgmath = "0.18.0"
 glyphon = "0.3.0"
 chrono = "0.4.31"

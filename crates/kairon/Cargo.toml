@@ -1,0 +1,16 @@
+[package]
+description = "A game engine written in Rust"
+name = "kairon"
+version = "0.0.1"
+edition = "2021"
+publish = false
+license = "GPL-3.0"
+authors = ["Tomás Silva <tomascsilvapro@gmail.com>"]
+
+
+[[bin]]
+name = "Kairon"
+path = "src/main.rs"
+
+[dependencies]
+window_handler.workspace = true

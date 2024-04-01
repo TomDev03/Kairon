@@ -1,0 +1,16 @@
+[package]
+name = "window_handler"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "window_handler"
+path = "src/window_handler.rs"
+
+[dependencies]
+chrono.workspace = true
+app.workspace = true
+
+[features]
+default = []
