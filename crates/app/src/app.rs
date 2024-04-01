@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
 
@@ -6,6 +7,8 @@ use ui;
 use egui_wgpu_backend::RenderPass;
 use log::{error, info};
 use wgpu::{hal::metal::Surface, rwh::HasWindowHandle, StoreOp, SurfaceTarget};
+use winit::event_loop::EventLoop;
+use winit::window::WindowBuilder;
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
 pub const INITIAL_WIDTH: u32 = 1280;
@@ -23,7 +26,19 @@ pub struct App {
 }
 
 impl App {
-    pub async fn new(window: Window) -> Self {
+    pub async fn new(event_loop: &EventLoop<()>) -> Self {
+        let window = WindowBuilder::new()
+            .with_decorations(true)
+            .with_resizable(true)
+            .with_transparent(false)
+            .with_title("egui-wgpu")
+            .with_inner_size(winit::dpi::PhysicalSize {
+                width: INITIAL_WIDTH,
+                height: INITIAL_HEIGHT,
+            })
+            .build(event_loop)
+            .unwrap();
+        
         let size = window.inner_size();
         let scale_factor = window.scale_factor();
 
@@ -114,7 +129,7 @@ impl App {
             size,
             clear_color,
             ui,
-            window,
+            window: window.borrow().clone(),
         }
     }
 
