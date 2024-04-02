@@ -1,12 +1,8 @@
-use std::borrow::Borrow;
-use std::rc::Rc;
-use std::{cell::RefCell, ops::Deref};
-
 use ui;
 
 use egui_wgpu_backend::RenderPass;
 use log::{error, info};
-use wgpu::{hal::metal::Surface, rwh::HasWindowHandle, StoreOp, SurfaceTarget};
+use wgpu::{StoreOp, SurfaceTarget};
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
@@ -38,7 +34,7 @@ impl App {
             })
             .build(event_loop)
             .unwrap();
-        
+
         let size = window.inner_size();
         let scale_factor = window.scale_factor();
 
@@ -113,11 +109,7 @@ impl App {
 
         surface.configure(&device, &surface_config);
 
-        let ui = ui::UI::new(
-            scale_factor,
-            size.width,
-            size.height,
-        );
+        let ui = ui::UI::new(scale_factor, size.width, size.height);
 
         let clear_color = wgpu::Color::BLACK;
 
@@ -129,8 +121,11 @@ impl App {
             size,
             clear_color,
             ui,
-            window: window.borrow().clone(),
+            window,
         }
+    }
+
+    pub async fn init(&mut self) {
     }
 
     pub fn window(&self) -> &Window {
