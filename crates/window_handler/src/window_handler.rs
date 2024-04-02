@@ -34,8 +34,8 @@ pub async fn run() {
         .with_transparent(false)
         .with_title("egui-wgpu")
         .with_inner_size(winit::dpi::PhysicalSize {
-            width: INITIAL_WIDTH,
-            height: INITIAL_HEIGHT,
+            width: app::INITIAL_WIDTH,
+            height: app::INITIAL_HEIGHT,
         })
         .build(&event_loop)
         .unwrap();
@@ -52,15 +52,15 @@ pub async fn run() {
             Event::WindowEvent {
                 ref event,
                 window_id,
-            } if window_id == app.window().id() => {
-                if !app.input(event) {
+            } if window_id == window.id() => {
+                if !app.input(&window, event) {
                     match event {
                         WindowEvent::RedrawRequested => {
                             app.update();
-                            match app.render() {
+                            match app.render(&window) {
                                 Ok(_) => (),
                                 // Reconfigure the surface if lost
-                                Err(wgpu::SurfaceError::Lost) => app.resize(app.get_size()),
+                                Err(wgpu::SurfaceError::Lost) => app.resize(&window, app.get_size()),
                                 // The system is out of memory, we should probably quit
                                 Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
                                 // All other errors (Outdated, Timeout) should be resolved by the next frame
@@ -74,7 +74,7 @@ pub async fn run() {
                             }
                         }
                         WindowEvent::Resized(resized) => {
-                            app.resize(*resized);
+                            app.resize(&window, *resized);
                         }
                         WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                             // TODO: Handle this error better

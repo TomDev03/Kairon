@@ -1,5 +1,5 @@
+// mod state;
 use ui;
-mod state;
 
 use egui_wgpu_backend::RenderPass;
 use log::{error, info};
@@ -12,7 +12,6 @@ pub const INITIAL_WIDTH: u32 = 1280;
 pub const INITIAL_HEIGHT: u32 = 720;
 
 pub struct App {
-    window: Window,
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -102,7 +101,6 @@ impl App  {
         let clear_color = wgpu::Color::BLACK;
 
         Self {
-            window,
             surface,
             device,
             queue,
@@ -113,12 +111,9 @@ impl App  {
         }
     }
 
-    pub async fn init(&mut self) {
-    }
-
-    pub fn window(&self) -> &Window {
-        &self.window
-    }
+    // pub fn window(&self) -> &Window {
+    //     &self.window
+    // }
 
     pub fn get_size(&self) -> winit::dpi::PhysicalSize<u32> {
         self.size
@@ -128,14 +123,14 @@ impl App  {
         &mut self.ui
     }
 
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    pub fn resize(&mut self, window: &Window, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
 
-            self.window.request_redraw();
+            window.request_redraw();
         }
     }
 
@@ -143,7 +138,7 @@ impl App  {
         self.ui.set_scale_factor(scale_factor as f64);
     }
 
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, window: &Window, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::KeyboardInput { event, .. } => {
                 if event.state == winit::event::ElementState::Pressed {
@@ -162,7 +157,7 @@ impl App  {
                     b: 1.0,
                     a: 1.0,
                 };
-                self.window.request_redraw();
+                window.request_redraw();
                 true
             }
             _ => false,
@@ -171,11 +166,11 @@ impl App  {
 
     pub fn update(&mut self) {}
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, window: &Window) -> Result<(), wgpu::SurfaceError> {
         let egui_rpass: RenderPass = RenderPass::new(&self.device, self.config.format, 1);
 
         self.ui.ui(
-            &self.window,
+            window,
             &self.device,
             &self.queue,
             &self.surface,
