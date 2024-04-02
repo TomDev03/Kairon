@@ -1,11 +1,9 @@
-// mod state;
+mod state;
 use ui;
 
 use egui_wgpu_backend::RenderPass;
 use log::{error, info};
-use wgpu::{StoreOp};
-#[cfg(not(any(android_platform, ios_platform)))]
-use softbuffer::{Context};
+use wgpu::StoreOp;
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
 pub const INITIAL_WIDTH: u32 = 1280;
@@ -21,23 +19,22 @@ pub struct App {
     ui: ui::UI,
 }
 
-impl App  {
+impl App {
     pub async fn new(window: Window) -> Self {
-
         let size = window.inner_size();
         let scale_factor = window.scale_factor();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
 
         let surface = match unsafe { instance.create_surface(window) } {
-                Ok(s) => s,
-                Err(e) => {
-                    // TODO: Handle this error better
-                    // check CreateSurfaceError enum for more info on how to handle the multiple errors more specifically
-                    error!("Failed to create surface: {}", e);
-                    panic!("Failed to start application");
-                }
-            };
+            Ok(s) => s,
+            Err(e) => {
+                // TODO: Handle this error better
+                // check CreateSurfaceError enum for more info on how to handle the multiple errors more specifically
+                error!("Failed to create surface: {}", e);
+                panic!("Failed to start application");
+            }
+        };
 
         let adapter = match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
