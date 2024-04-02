@@ -28,10 +28,22 @@ pub async fn run() {
         .build()
         .unwrap();
 
+    let window = WindowBuilder::new()
+        .with_decorations(true)
+        .with_resizable(true)
+        .with_transparent(false)
+        .with_title("egui-wgpu")
+        .with_inner_size(winit::dpi::PhysicalSize {
+            width: INITIAL_WIDTH,
+            height: INITIAL_HEIGHT,
+        })
+        .build(&event_loop)
+        .unwrap();
+
     // Opens the window and starts processing events (although no events are handled yet)
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut app = app::App::new(&event_loop).await;
+    let mut app = app::App::new(window).await;
 
     match event_loop.run(move |event, elwt| {
         app.get_gui().handle_event(&event);

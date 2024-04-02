@@ -15,6 +15,7 @@ wgpu.workspace = true
 winit.workspace = true
 egui_wgpu_backend.workspace = true
 log.workspace = true
+softbuffer.workspace = true
 
 [features]
 default = []

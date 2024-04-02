@@ -1,16 +1,18 @@
 use ui;
+mod state;
 
 use egui_wgpu_backend::RenderPass;
 use log::{error, info};
-use wgpu::{StoreOp, SurfaceTarget};
-use winit::event_loop::EventLoop;
-use winit::window::WindowBuilder;
+use wgpu::{StoreOp};
+#[cfg(not(any(android_platform, ios_platform)))]
+use softbuffer::{Context};
 use winit::{event::WindowEvent, keyboard::KeyCode, window::Window};
 
 pub const INITIAL_WIDTH: u32 = 1280;
 pub const INITIAL_HEIGHT: u32 = 720;
 
 pub struct App {
+    window: Window,
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -18,30 +20,17 @@ pub struct App {
     size: winit::dpi::PhysicalSize<u32>,
     clear_color: wgpu::Color,
     ui: ui::UI,
-    window: Window,
 }
 
-impl App {
-    pub async fn new(event_loop: &EventLoop<()>) -> Self {
-        let window = WindowBuilder::new()
-            .with_decorations(true)
-            .with_resizable(true)
-            .with_transparent(false)
-            .with_title("egui-wgpu")
-            .with_inner_size(winit::dpi::PhysicalSize {
-                width: INITIAL_WIDTH,
-                height: INITIAL_HEIGHT,
-            })
-            .build(event_loop)
-            .unwrap();
+impl App  {
+    pub async fn new(window: Window) -> Self {
 
         let size = window.inner_size();
         let scale_factor = window.scale_factor();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
-        let surface;
-        {
-            surface = match instance.create_surface(window) {
+
+        let surface = match unsafe { instance.create_surface(window) } {
                 Ok(s) => s,
                 Err(e) => {
                     // TODO: Handle this error better
@@ -50,7 +39,6 @@ impl App {
                     panic!("Failed to start application");
                 }
             };
-        }
 
         let adapter = match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -114,6 +102,7 @@ impl App {
         let clear_color = wgpu::Color::BLACK;
 
         Self {
+            window,
             surface,
             device,
             queue,
@@ -121,7 +110,6 @@ impl App {
             size,
             clear_color,
             ui,
-            window,
         }
     }
 
