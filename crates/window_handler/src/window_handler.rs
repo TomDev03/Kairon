@@ -2,10 +2,8 @@ use app;
 
 use log::{error, info};
 use winit::event::{Event, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::Window;
+use winit::event_loop::ControlFlow;
 use winit::{keyboard::KeyCode, window::WindowBuilder};
-
 
 /*
 enum CustomEvent {
@@ -43,24 +41,24 @@ pub async fn run() {
     // Opens the window and starts processing events (although no events are handled yet)
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut app = app::App::new(window).await;
+    let mut app = app::App::new(&window).await;
 
     match event_loop.run(move |event, elwt| {
-        app.get_gui().handle_event(&event);
-
         match event {
             Event::WindowEvent {
                 ref event,
                 window_id,
-            } if window_id == window.id() => {
-                if !app.input(&window, event) {
+            } if app.windows().contains_key(&window_id) => {
+                if !app.input(window_id, event) {
                     match event {
                         WindowEvent::RedrawRequested => {
-                            app.update();
-                            match app.render(&window) {
+                            //app.update();
+                            match app.render(window_id) {
                                 Ok(_) => (),
                                 // Reconfigure the surface if lost
-                                Err(wgpu::SurfaceError::Lost) => app.resize(&window, app.get_size()),
+                                Err(wgpu::SurfaceError::Lost) => {
+                                    //app.resize(&window, app.get_size())
+                                }
                                 // The system is out of memory, we should probably quit
                                 Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
                                 // All other errors (Outdated, Timeout) should be resolved by the next frame
@@ -74,7 +72,7 @@ pub async fn run() {
                             }
                         }
                         WindowEvent::Resized(resized) => {
-                            app.resize(&window, *resized);
+                            app.resize(window_id, *resized);
                         }
                         WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                             // TODO: Handle this error better
@@ -91,12 +89,6 @@ pub async fn run() {
         }
     }) {
         Ok(_) => info!("Event loop exited successfully"),
-        Err(e) => {
-            // TODO: Handle this error better
-            // check EventLoopErro enum for more info on how to handle the multiple errors more specifically
-            error!("Event loop exited with error: {}", e)
-        }
+        Err(e) => error!("Event loop exited with error: {}", e),
     };
-
-    info!("Event loop exited");
 }

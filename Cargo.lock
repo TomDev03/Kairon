@@ -975,14 +975,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kairon"
-version = "0.0.1"
-dependencies = [
- "pollster",
- "window_handler",
-]
-
-[[package]]
 name = "khronos-egl"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1653,6 +1645,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tales"
+version = "0.0.1"
+dependencies = [
+ "pollster",
+ "window_handler",
 ]
 
 [[package]]

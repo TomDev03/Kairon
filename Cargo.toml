@@ -1,12 +1,12 @@
 [workspace]
-members = ["crates/app", "crates/ui", "crates/window_handler", "crates/kairon"]
-default-members = ["crates/kairon"]
+members = ["crates/app", "crates/ui", "crates/window_handler", "crates/tales"]
+default-members = ["crates/tales"]
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
-kairon = { path = "crates/kairon" }
+kairon = { path = "crates/tales" }
 app = { path = "crates/app" }
 ui = { path = "crates/ui" }
 window_handler = { path = "crates/window_handler" }

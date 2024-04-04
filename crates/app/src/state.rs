@@ -1,30 +1,34 @@
 use core::num::NonZeroU32;
+use log::error;
 use std::error::Error;
-use std::fmt;
-use std::fmt::Debug;
 use std::mem;
 use wgpu::Surface;
 use winit::dpi::{LogicalSize, PhysicalPosition, PhysicalSize};
 use winit::keyboard::ModifiersState;
 use winit::window::Window;
-use winit::window::{
-    Cursor, CursorGrabMode, CustomCursor, CustomCursorSource, Fullscreen, Icon, ResizeDirection,
-    Theme,
-};
+use winit::window::{CursorGrabMode, Fullscreen, ResizeDirection, Theme};
 
-use crate::App;
+/// The amount of points to around the window for drag resize direction calculations.
+const BORDER_SIZE: f64 = 20.;
 
 /// State of the window.
-pub struct WindowState {
+pub struct WindowState<'a> {
     /// IME input.
     ime: bool,
     /// Render surface.
     ///
     /// NOTE: This surface must be dropped before the `Window`.
-    #[cfg(not(any(android_platform, ios_platform)))]
-    surface: Surface<'static>,
+    surface: Surface<'a>,
+    // Surface configuration.
+    surface_config: wgpu::SurfaceConfiguration,
     /// The actual winit Window.
-    window: Window,
+    window: &'a Window,
+    /// The wgpu instance.
+    device: wgpu::Device,
+    /// The wgpu queue.
+    queue: wgpu::Queue,
+    /// UI of the window
+    ui: ui::UI,
     /// The window theme we're drawing with.
     theme: Theme,
     /// Cursor position over the window.
@@ -39,46 +43,122 @@ pub struct WindowState {
     zoom: f64,
     /// The amount of rotation of the window.
     rotated: f32,
+    // Size of the window.
+    size: PhysicalSize<u32>,
 
     #[cfg(macos_platform)]
     option_as_alt: OptionAsAlt,
 
+    // Window clear color.
+    clear_color: wgpu::Color,
+
     // Cursor states.
     named_idx: usize,
-    custom_idx: usize,
+    //custom_idx: usize,
     cursor_hidden: bool,
 }
 
-impl WindowState {
-    fn new(app: &App, window: Window) -> Result<Self, Box<dyn Error>> {
-        #[cfg(not(any(android_platform, ios_platform)))]
+impl<'a> WindowState<'a> {
+    pub async fn new(window: &'a Window) -> Result<Self, Box<dyn Error>> {
+        let size = window.inner_size();
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
-        // SAFETY: the surface is dropped before the `window` which provided it with handle, thus
-        // it doesn't outlive it.
-        #[cfg(not(any(android_platform, ios_platform)))]
-        let surface = unsafe { instance.create_surface(window) }.unwrap();
+
+        let surface = match unsafe { instance.create_surface(window) } {
+            Ok(s) => s,
+            Err(e) => {
+                // TODO: Handle this error better
+                // check CreateSurfaceError enum for more info on how to handle the multiple errors more specifically
+                error!("Failed to create surface: {}", e);
+                panic!("Failed to start application");
+            }
+        };
 
         let theme = window.theme().unwrap_or(Theme::Dark);
         println!("Theme: {theme:?}");
         let named_idx = 0;
-        window.set_cursor_icon(CURSORS[named_idx]);
+        //window.set_cursor_icon(CURSORS[named_idx]);
+
+        let ui = ui::UI::new(window.scale_factor(), size.width, size.height);
+
+        let clear_color = wgpu::Color::BLACK;
 
         // Allow IME out of the box.
         let ime = true;
         window.set_ime_allowed(ime);
 
-        let size = window.inner_size();
+        let adapter = match instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: Some(&surface),
+                force_fallback_adapter: false,
+            })
+            .await
+        {
+            Some(a) => a,
+            None => {
+                error!("Failed to find a suitable adapter");
+                panic!("Failed to start application");
+            }
+        };
+
+        let (device, queue) = match adapter
+            .request_device(
+                &wgpu::DeviceDescriptor {
+                    label: None,
+                    required_features: wgpu::Features::default(),
+                    required_limits: wgpu::Limits::default(),
+                },
+                None,
+            )
+            .await
+        {
+            Ok((d, q)) => (d, q),
+            Err(e) => {
+                // TODO: Handle this error better
+                // check RequestDeviceError enum for more info on how to handle the multiple errors more specifically
+                error!("Failed to create device: {}", e);
+                panic!("Failed to start application");
+            }
+        };
+
+        let surface_caps = surface.get_capabilities(&adapter);
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .copied()
+            .filter(|f| f.is_srgb())
+            .next()
+            .unwrap_or(surface_caps.formats[0]);
+
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
+            width: size.width,
+            height: size.height,
+            present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        };
+
+        surface.configure(&device, &surface_config);
+
         let mut state = Self {
             #[cfg(macos_platform)]
             option_as_alt: window.option_as_alt(),
-            custom_idx: app.custom_cursors.len() - 1,
+            //custom_idx: app.custom_cursors.len() - 1,
             cursor_grab: CursorGrabMode::None,
             named_idx,
-            #[cfg(not(any(android_platform, ios_platform)))]
             surface,
-            window,
+            surface_config,
+            device,
+            queue,
+            window: &window,
+            ui,
+            clear_color,
             theme,
             ime,
+            size,
             cursor_position: Default::default(),
             cursor_hidden: Default::default(),
             modifiers: Default::default(),
@@ -89,6 +169,22 @@ impl WindowState {
 
         state.resize(size);
         Ok(state)
+    }
+
+    pub fn window(&self) -> &Window {
+        self.window
+    }
+
+    pub fn set_clear_color(&mut self, color: wgpu::Color) {
+        self.clear_color = color;
+    }
+
+    pub fn get_size(&self) -> PhysicalSize<u32> {
+        self.size
+    }
+
+    pub fn get_gui(&mut self) -> &mut ui::UI {
+        &mut self.ui
     }
 
     pub fn toggle_ime(&mut self) {
@@ -206,19 +302,19 @@ impl WindowState {
     }
 
     /// Pick the next cursor.
-    fn next_cursor(&mut self) {
-        self.named_idx = (self.named_idx + 1) % CURSORS.len();
-        println!("Setting cursor to \"{:?}\"", CURSORS[self.named_idx]);
-        self.window
-            .set_cursor(Cursor::Icon(CURSORS[self.named_idx]));
-    }
+    // fn next_cursor(&mut self) {
+    //     self.named_idx = (self.named_idx + 1) % CURSORS.len();
+    //     println!("Setting cursor to \"{:?}\"", CURSORS[self.named_idx]);
+    //     self.window
+    //         .set_cursor(Cursor::Icon(CURSORS[self.named_idx]));
+    // }
 
     /// Pick the next custom cursor.
-    fn next_custom_cursor(&mut self, custom_cursors: &[CustomCursor]) {
-        self.custom_idx = (self.custom_idx + 1) % custom_cursors.len();
-        let cursor = Cursor::Custom(custom_cursors[self.custom_idx].clone());
-        self.window.set_cursor(cursor);
-    }
+    // fn next_custom_cursor(&mut self, custom_cursors: &[CustomCursor]) {
+    //     self.custom_idx = (self.custom_idx + 1) % custom_cursors.len();
+    //     let cursor = Cursor::Custom(custom_cursors[self.custom_idx].clone());
+    //     self.window.set_cursor(cursor);
+    // }
 
     /// Resize the window to the new size.
     fn resize(&mut self, size: PhysicalSize<u32>) {
@@ -230,9 +326,7 @@ impl WindowState {
                 (Some(width), Some(height)) => (width, height),
                 _ => return,
             };
-            self.surface
-                .resize(width, height)
-                .expect("failed to resize inner buffer");
+            self.window.request_inner_size(size);
         }
         self.window.request_redraw();
     }
@@ -318,31 +412,7 @@ impl WindowState {
     }
 
     /// Draw the window contents.
-    #[cfg(not(any(android_platform, ios_platform)))]
     fn draw(&mut self) -> Result<(), Box<dyn Error>> {
-        if self.occluded {
-            println!("Skipping drawing occluded window={:?}", self.window.id());
-            return Ok(());
-        }
-
-        const WHITE: u32 = 0xFFFFFFFF;
-        const DARK_GRAY: u32 = 0xFF181818;
-
-        let color = match self.theme {
-            Theme::Light => WHITE,
-            Theme::Dark => DARK_GRAY,
-        };
-
-        let mut buffer = self.surface.buffer_mut()?;
-        buffer.fill(color);
-        self.window.pre_present_notify();
-        buffer.present()?;
-        Ok(())
-    }
-
-    #[cfg(any(android_platform, ios_platform))]
-    fn draw(&mut self) -> Result<(), Box<dyn Error>> {
-        println!("Drawing but without rendering...");
         Ok(())
     }
 }

@@ -1,6 +1,6 @@
 [package]
 description = "A game engine written in Rust"
-name = "kairon"
+name = "tales"
 version = "0.0.1"
 edition = "2021"
 publish = false
@@ -9,7 +9,7 @@ authors = ["Tomás Silva <tomascsilvapro@gmail.com>"]
 
 
 [[bin]]
-name = "Kairon"
+name = "tales"
 path = "src/main.rs"
 
 [dependencies]
