@@ -56,14 +56,12 @@ impl<'a> App<'a> {
     }
 
     pub fn resize(&mut self, window_id: WindowId, new_size: winit::dpi::PhysicalSize<u32>) {
-        // if new_size.width > 0 && new_size.height > 0 {
-        //     self.size = new_size;
-        //     self.config.width = new_size.width;
-        //     self.config.height = new_size.height;
-        //     self.surface.configure(&self.device, &self.config);
-
-        //     window.request_redraw();
-        // }
+        let window = self.window(window_id);
+        if new_size.width > 0 && new_size.height > 0 {
+            window.change_config_size(new_size);
+            //window.resize(new_size);
+            window.window().request_redraw();
+        }
     }
 
     pub fn scale_factor_changed(&mut self, scale_factor: f64) {
@@ -102,7 +100,7 @@ impl<'a> App<'a> {
     pub fn render(&mut self, window_id: WindowId) -> Result<(), wgpu::SurfaceError> {
         for (id, window) in self.windows.iter_mut() {
             if *id == window_id {
-                window.draw();
+                let _ = window.draw();
             }
         }
 

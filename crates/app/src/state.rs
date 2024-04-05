@@ -179,6 +179,13 @@ impl<'a> WindowState<'a> {
         &mut self.ui
     }
 
+    pub fn change_config_size(&mut self, size: PhysicalSize<u32>) {
+        self.surface_config.width = size.width;
+        self.surface_config.height = size.height;
+        self.size = size;
+        self.surface.configure(&self.device, &self.surface_config);
+    }
+
     pub fn toggle_ime(&mut self) {
         self.ime = !self.ime;
         self.window.set_ime_allowed(self.ime);
@@ -309,13 +316,11 @@ impl<'a> WindowState<'a> {
     // }
 
     /// Resize the window to the new size.
-    fn resize(&mut self, size: PhysicalSize<u32>) {
+    pub fn resize(&mut self, size: PhysicalSize<u32>) {
         println!("Resized to {size:?}");
-        #[cfg(not(any(android_platform, ios_platform)))]
         {
-            let (width, height) = match (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
-            {
-                (Some(width), Some(height)) => (width, height),
+            let size = match (NonZeroU32::new(size.width), NonZeroU32::new(size.height)) {
+                (Some(width), Some(height)) => PhysicalSize::new(width.get(), height.get()),
                 _ => return,
             };
             match self.window.request_inner_size(size) {
