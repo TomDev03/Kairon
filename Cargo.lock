@@ -1769,6 +1769,7 @@ dependencies = [
  "egui_demo_lib",
  "egui_wgpu_backend",
  "egui_winit_platform",
+ "log",
  "wgpu",
  "winit",
 ]

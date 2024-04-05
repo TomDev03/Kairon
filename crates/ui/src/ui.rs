@@ -4,8 +4,10 @@ use std::time::Instant;
 use ::egui::FontDefinitions;
 use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
 use egui_winit_platform::{Platform, PlatformDescriptor};
+use log::error;
 use wgpu::TextureViewDescriptor;
 use wgpu::{Device, Queue, Surface, SurfaceConfiguration};
+use winit::error;
 use winit::event::Event;
 use winit::window::Window;
 
@@ -62,6 +64,7 @@ impl UI {
                 // This error occurs when the app is minimized on Windows.
                 // Silently return here to prevent spamming the console with:
                 // "The underlying surface has changed, and therefore the swap chain must be updated"
+                error!("Outdated surface error");
                 return;
             }
             Err(e) => {
@@ -82,10 +85,12 @@ impl UI {
 
         // End the UI frame. We could now handle the output and draw the UI with the backend.
         let full_output = self.platform.end_frame(Some(&window));
+
         let biding = self
             .platform
             .context()
             .tessellate(full_output.shapes, self.scale_factor as f32);
+
         let paint_jobs = biding.as_slice();
 
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -99,21 +104,26 @@ impl UI {
             scale_factor: self.scale_factor as f32,
         };
         let tdelta: egui::TexturesDelta = full_output.textures_delta as egui::TexturesDelta;
+
         render_pass
             .add_textures(&device, &queue, &tdelta)
             .expect("add texture ok");
+
         render_pass.update_buffers(&device, &queue, paint_jobs, &screen_descriptor);
 
         // Record all render passes.
-        render_pass
-            .execute(
-                &mut encoder,
-                &output_view,
-                &paint_jobs,
-                &screen_descriptor,
-                Some(wgpu::Color::BLACK),
-            )
-            .unwrap();
+        match render_pass.execute(
+            &mut encoder,
+            &output_view,
+            &paint_jobs,
+            &screen_descriptor,
+            Some(wgpu::Color::BLACK),
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Error: {:?}", e);
+            }
+        };
         // Submit the commands.
         queue.submit(iter::once(encoder.finish()));
 

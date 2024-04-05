@@ -97,49 +97,14 @@ impl<'a> App<'a> {
         }
     }
 
-    pub fn update(&'a mut self, event: Event<()>, elwt: &EventLoopWindowTarget<()>) {}
+    pub fn update(&'a mut self) {}
 
     pub fn render(&mut self, window_id: WindowId) -> Result<(), wgpu::SurfaceError> {
-        // let egui_rpass: RenderPass = RenderPass::new(&self.device, self.config.format, 1);
-
-        // self.ui.ui(
-        //     window,
-        //     &self.device,
-        //     &self.queue,
-        //     &self.surface,
-        //     egui_rpass,
-        //     &mut self.config,
-        // );
-
-        // let output = self.surface.get_current_texture().unwrap();
-        // let view = output
-        //     .texture
-        //     .create_view(&wgpu::TextureViewDescriptor::default());
-        // let mut encoder = self
-        //     .device
-        //     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        //         label: Some("Render Encoder"),
-        //     });
-
-        // {
-        //     let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-        //         label: Some("Render Pass"),
-        //         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-        //             view: &view,
-        //             resolve_target: None,
-        //             ops: wgpu::Operations {
-        //                 load: wgpu::LoadOp::Clear(self.clear_color),
-        //                 store: StoreOp::Store,
-        //             },
-        //         })],
-        //         timestamp_writes: None,
-        //         occlusion_query_set: None,
-        //         depth_stencil_attachment: None,
-        //     });
-        // }
-
-        // self.queue.submit(std::iter::once(encoder.finish()));
-        // output.present();
+        for (id, window) in self.windows.iter_mut() {
+            if *id == window_id {
+                window.draw();
+            }
+        }
 
         Ok(())
     }

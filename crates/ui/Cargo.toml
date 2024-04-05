@@ -16,6 +16,7 @@ egui.workspace = true
 wgpu.workspace = true
 winit.workspace = true
 egui_demo_lib.workspace = true
+log.workspace = true
 
 [features]
 default = []

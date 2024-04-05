@@ -1,8 +1,9 @@
 use core::num::NonZeroU32;
+use egui_wgpu_backend::RenderPass;
 use log::error;
 use std::error::Error;
 use std::mem;
-use wgpu::Surface;
+use wgpu::{StoreOp, Surface};
 use winit::dpi::{LogicalSize, PhysicalPosition, PhysicalSize};
 use winit::keyboard::ModifiersState;
 use winit::window::Window;
@@ -35,14 +36,8 @@ pub struct WindowState<'a> {
     cursor_position: Option<PhysicalPosition<f64>>,
     /// Window modifiers state.
     modifiers: ModifiersState,
-    /// Occlusion state of the window.
-    occluded: bool,
     /// Current cursor grab mode.
     cursor_grab: CursorGrabMode,
-    /// The amount of zoom into window.
-    zoom: f64,
-    /// The amount of rotation of the window.
-    rotated: f32,
     // Size of the window.
     size: PhysicalSize<u32>,
 
@@ -63,7 +58,7 @@ impl<'a> WindowState<'a> {
         let size = window.inner_size();
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
 
-        let surface = match unsafe { instance.create_surface(window) } {
+        let surface = match instance.create_surface(window) {
             Ok(s) => s,
             Err(e) => {
                 // TODO: Handle this error better
@@ -162,9 +157,6 @@ impl<'a> WindowState<'a> {
             cursor_position: Default::default(),
             cursor_hidden: Default::default(),
             modifiers: Default::default(),
-            occluded: Default::default(),
-            rotated: Default::default(),
-            zoom: Default::default(),
         };
 
         state.resize(size);
@@ -326,7 +318,13 @@ impl<'a> WindowState<'a> {
                 (Some(width), Some(height)) => (width, height),
                 _ => return,
             };
-            self.window.request_inner_size(size);
+            match self.window.request_inner_size(size) {
+                Some(new_size) => {
+                    println!("Inner size changed to {new_size:?}");
+                    self.size = new_size;
+                }
+                None => println!("Inner size change got ignored"),
+            };
         }
         self.window.request_redraw();
     }
@@ -403,16 +401,59 @@ impl<'a> WindowState<'a> {
         }
     }
 
-    /// Change window occlusion state.
-    fn set_occluded(&mut self, occluded: bool) {
-        self.occluded = occluded;
-        if !occluded {
-            self.window.request_redraw();
-        }
-    }
-
     /// Draw the window contents.
-    fn draw(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
+        let egui_rpass: RenderPass = RenderPass::new(&self.device, self.surface_config.format, 1);
+
+        // self.ui.ui(
+        //     self.window,
+        //     &self.device,
+        //     &self.queue,
+        //     &self.surface,
+        //     egui_rpass,
+        //     &self.surface_config,
+        // );
+
+        let output = match self.surface.get_current_texture() {
+            Ok(output) => output,
+            Err(wgpu::SurfaceError::Outdated) => {
+                self.surface.configure(&self.device, &self.surface_config);
+                self.surface
+                    .get_current_texture()
+                    .expect("Failed to acquire next surface texture!")
+            }
+            Err(e) => panic!("Failed to acquire next surface texture: {e}"),
+        };
+
+        let view = output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
+
+        {
+            let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(self.clear_color),
+                        store: StoreOp::Store,
+                    },
+                })],
+                timestamp_writes: None,
+                occlusion_query_set: None,
+                depth_stencil_attachment: None,
+            });
+        }
+
+        self.queue.submit(std::iter::once(encoder.finish()));
+        output.present();
         Ok(())
     }
 }
