@@ -1,9 +1,8 @@
 use app;
 
 use log::{error, info};
-use winit::event::{Event, WindowEvent};
 use winit::event_loop::ControlFlow;
-use winit::{keyboard::KeyCode, window::WindowBuilder};
+use winit::window::WindowBuilder;
 
 /*
 enum CustomEvent {
@@ -44,49 +43,7 @@ pub async fn run() {
     let mut app = app::App::new(&window).await;
 
     match event_loop.run(move |event, elwt| {
-        match event {
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } if app.windows().contains_key(&window_id) => {
-                if !app.input(window_id, event) {
-                    match event {
-                        WindowEvent::RedrawRequested => {
-                            //app.update();
-                            match app.render(window_id) {
-                                Ok(_) => (),
-                                // Reconfigure the surface if lost
-                                Err(wgpu::SurfaceError::Lost) => {
-                                    //app.resize(&window, app.get_size())
-                                }
-                                // The system is out of memory, we should probably quit
-                                Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
-                                // All other errors (Outdated, Timeout) should be resolved by the next frame
-                                Err(e) => eprintln!("{:?}", e),
-                            }
-                        }
-                        WindowEvent::CloseRequested => elwt.exit(),
-                        WindowEvent::KeyboardInput { event, .. } => {
-                            if event.physical_key == KeyCode::Escape {
-                                elwt.exit();
-                            }
-                        }
-                        WindowEvent::Resized(resized) => {
-                            app.resize(window_id, *resized);
-                        }
-                        WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
-                            // TODO: Handle this error better
-                            app.scale_factor_changed(*scale_factor);
-                        }
-                        _ => (),
-                    }
-                }
-            }
-            Event::AboutToWait => {
-                //app.window().request_redraw();
-            }
-            _ => (),
-        }
+        app.input(&event, elwt);
     }) {
         Ok(_) => info!("Event loop exited successfully"),
         Err(e) => error!("Event loop exited with error: {}", e),

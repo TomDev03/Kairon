@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use state::WindowState;
 use ui;
 
-use egui_wgpu_backend::RenderPass;
 use log::info;
 use winit::{
     event::{Event, WindowEvent},
@@ -13,8 +12,8 @@ use winit::{
     window::{Window, WindowId},
 };
 
-pub const INITIAL_WIDTH: u32 = 1280;
-pub const INITIAL_HEIGHT: u32 = 720;
+pub const INITIAL_WIDTH: u32 = 3124;
+pub const INITIAL_HEIGHT: u32 = 1964;
 
 pub struct App<'a> {
     /// Custom cursors assets.
@@ -22,6 +21,11 @@ pub struct App<'a> {
     //custom_cursors: Vec<CursorIcon>,
     /// Application icon.
     //icon: Icon,
+
+    // Currrent window
+    current_window: WindowId,
+
+    // The windows that the application is managing.
     windows: HashMap<WindowId, WindowState<'a>>,
 }
 
@@ -37,7 +41,10 @@ impl<'a> App<'a> {
 
         w.insert(window.id(), w_state);
 
-        Self { windows: w }
+        Self {
+            current_window: window.id(),
+            windows: w,
+        }
     }
 
     pub fn window(&mut self, window_id: WindowId) -> &mut WindowState<'a> {
@@ -46,6 +53,10 @@ impl<'a> App<'a> {
 
     pub fn windows(&mut self) -> &mut HashMap<WindowId, WindowState<'a>> {
         &mut self.windows
+    }
+
+    pub fn set_current_window(&mut self, window_id: WindowId) {
+        self.current_window = window_id;
     }
 
     pub fn get_gui(&mut self, window_id: WindowId) -> &mut ui::UI {
@@ -68,30 +79,67 @@ impl<'a> App<'a> {
         //self.ui.set_scale_factor(scale_factor as f64);
     }
 
-    pub fn input(&mut self, window_id: WindowId, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, event: &Event<()>, elwt: &EventLoopWindowTarget<()>) {
+        for window in self.windows.values_mut() {
+            window.handle_input(event);
+        }
+
         match event {
-            WindowEvent::KeyboardInput { event, .. } => {
-                if event.state == winit::event::ElementState::Pressed {
-                    if event.physical_key == KeyCode::Escape {
-                        drop(WindowEvent::CloseRequested);
-                        return true;
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } if self.windows().contains_key(&window_id) => {
+                self.set_current_window(*window_id);
+                match event {
+                    WindowEvent::RedrawRequested => {
+                        //app.update();
+                        info!("Redraw requested");
+                        match self.render(*window_id) {
+                            Ok(_) => (),
+                            // Reconfigure the surface if lost
+                            Err(wgpu::SurfaceError::Lost) => {
+                                //app.resize(&window, app.get_size())
+                            }
+                            // The system is out of memory, we should probably quit
+                            Err(wgpu::SurfaceError::OutOfMemory) => elwt.exit(),
+                            // All other errors (Outdated, Timeout) should be resolved by the next frame
+                            Err(e) => eprintln!("{:?}", e),
+                        }
                     }
+                    WindowEvent::KeyboardInput { event, .. } => {
+                        if event.state == winit::event::ElementState::Pressed {
+                            if event.physical_key == KeyCode::Escape {
+                                elwt.exit();
+                            }
+                        }
+                    }
+                    WindowEvent::CursorMoved { position, .. } => {
+                        info!("Mouse moved to {:?}", position);
+                        let window: &mut WindowState = self.window(*window_id);
+                        window.cursor_moved(*position);
+                        window.set_clear_color(wgpu::Color {
+                            r: position.x / window.get_size().width as f64,
+                            g: position.y / window.get_size().height as f64,
+                            b: 1.0,
+                            a: 1.0,
+                        });
+                        //window.window().request_redraw();
+                    }
+                    WindowEvent::CloseRequested => elwt.exit(),
+                    WindowEvent::Resized(resized) => {
+                        self.resize(*window_id, *resized);
+                    }
+                    WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                        // TODO: Handle this error better
+                        self.scale_factor_changed(*scale_factor);
+                    }
+                    _ => (),
                 }
-                false
             }
-            WindowEvent::CursorMoved { position, .. } => {
-                info!("Mouse moved to {:?}", position);
-                let window: &mut WindowState = self.window(window_id);
-                window.set_clear_color(wgpu::Color {
-                    r: position.x / window.get_size().width as f64,
-                    g: position.y / window.get_size().height as f64,
-                    b: 1.0,
-                    a: 1.0,
-                });
-                window.window().request_redraw();
-                true
+            Event::AboutToWait => {
+                self.window(self.current_window).window().request_redraw();
             }
-            _ => false,
+            _ => (),
         }
     }
 

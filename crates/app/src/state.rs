@@ -1,10 +1,11 @@
 use core::num::NonZeroU32;
-use egui_wgpu_backend::RenderPass;
-use log::error;
+use log::{error, info};
 use std::error::Error;
 use std::mem;
-use wgpu::{StoreOp, Surface};
+use wgpu::core::device;
+use wgpu::Surface;
 use winit::dpi::{LogicalSize, PhysicalPosition, PhysicalSize};
+use winit::event::Event;
 use winit::keyboard::ModifiersState;
 use winit::window::Window;
 use winit::window::{CursorGrabMode, Fullscreen, ResizeDirection, Theme};
@@ -73,8 +74,6 @@ impl<'a> WindowState<'a> {
         let named_idx = 0;
         //window.set_cursor_icon(CURSORS[named_idx]);
 
-        let ui = ui::UI::new(window.scale_factor(), size.width, size.height);
-
         let clear_color = wgpu::Color::BLACK;
 
         // Allow IME out of the box.
@@ -137,6 +136,14 @@ impl<'a> WindowState<'a> {
         };
 
         surface.configure(&device, &surface_config);
+
+        let ui = ui::UI::new(
+            &device,
+            surface_format,
+            window.scale_factor(),
+            size.width,
+            size.height,
+        );
 
         let mut state = Self {
             #[cfg(macos_platform)]
@@ -406,59 +413,65 @@ impl<'a> WindowState<'a> {
         }
     }
 
+    // Window update loop
+    pub fn handle_input(&mut self, event: &Event<()>) {
+        self.ui.handle_event(event);
+    }
+
     /// Draw the window contents.
     pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
-        let egui_rpass: RenderPass = RenderPass::new(&self.device, self.surface_config.format, 1);
+        // let output = match self.surface.get_current_texture() {
+        //     Ok(output) => output,
+        //     Err(wgpu::SurfaceError::Outdated) => {
+        //         self.surface.configure(&self.device, &self.surface_config);
+        //         self.surface
+        //             .get_current_texture()
+        //             .expect("Failed to acquire next surface texture!")
+        //     }
+        //     Err(e) => panic!("Failed to acquire next surface texture: {e}"),
+        // };
 
-        // self.ui.ui(
-        //     self.window,
-        //     &self.device,
-        //     &self.queue,
-        //     &self.surface,
-        //     egui_rpass,
-        //     &self.surface_config,
-        // );
+        // let view = output
+        //     .texture
+        //     .create_view(&wgpu::TextureViewDescriptor::default());
 
-        let output = match self.surface.get_current_texture() {
-            Ok(output) => output,
-            Err(wgpu::SurfaceError::Outdated) => {
-                self.surface.configure(&self.device, &self.surface_config);
-                self.surface
-                    .get_current_texture()
-                    .expect("Failed to acquire next surface texture!")
-            }
-            Err(e) => panic!("Failed to acquire next surface texture: {e}"),
-        };
+        // let mut encoder = self
+        //     .device
+        //     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        //         label: Some("Render Encoder"),
+        //     });
 
-        let view = output
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        // {
+        //     let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        //         label: Some("Render Pass"),
+        //         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+        //             view: &view,
+        //             resolve_target: None,
+        //             ops: wgpu::Operations {
+        //                 load: wgpu::LoadOp::Clear(self.clear_color),
+        //                 store: StoreOp::Store,
+        //             },
+        //         })],
+        //         timestamp_writes: None,
+        //         occlusion_query_set: None,
+        //         depth_stencil_attachment: None,
+        //     });
+        // }
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
+        // self.queue.submit(std::iter::once(encoder.finish()));
+        // output.present();
 
-        {
-            let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(self.clear_color),
-                        store: StoreOp::Store,
-                    },
-                })],
-                timestamp_writes: None,
-                occlusion_query_set: None,
-                depth_stencil_attachment: None,
-            });
-        }
+        info!("Getting surface info");
+        info!("Surface info: {:?}", self.surface_config);
 
-        self.queue.submit(std::iter::once(encoder.finish()));
-        output.present();
+        self.ui.ui(
+            self.window,
+            &self.device,
+            &self.queue,
+            &self.surface,
+            &self.surface_config,
+        );
+
         Ok(())
     }
 }

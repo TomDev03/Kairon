@@ -2,12 +2,12 @@ use std::iter;
 use std::time::Instant;
 
 use ::egui::FontDefinitions;
+use egui::TextFormat;
 use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
 use egui_winit_platform::{Platform, PlatformDescriptor};
 use log::error;
 use wgpu::TextureViewDescriptor;
 use wgpu::{Device, Queue, Surface, SurfaceConfiguration};
-use winit::error;
 use winit::event::Event;
 use winit::window::Window;
 
@@ -15,11 +15,18 @@ pub struct UI {
     platform: Platform,
     start_time: Instant,
     scale_factor: f64,
+    render_pass: RenderPass,
     demo_app: egui_demo_lib::DemoWindows,
 }
 
 impl UI {
-    pub fn new(scale_factor: f64, width: u32, height: u32) -> Self {
+    pub fn new(
+        device: &Device,
+        surface_format: wgpu::TextureFormat,
+        scale_factor: f64,
+        width: u32,
+        height: u32,
+    ) -> Self {
         let platform = Platform::new(PlatformDescriptor {
             physical_width: width,
             physical_height: height,
@@ -30,10 +37,13 @@ impl UI {
 
         let demo_app = egui_demo_lib::DemoWindows::default();
 
+        let render_pass = RenderPass::new(&device, surface_format, 1);
+
         Self {
             platform,
             start_time: Instant::now(),
             scale_factor,
+            render_pass,
             demo_app,
         }
     }
@@ -52,7 +62,6 @@ impl UI {
         device: &Device,
         queue: &Queue,
         surface: &Surface,
-        mut render_pass: RenderPass,
         surface_config: &SurfaceConfiguration,
     ) {
         self.platform
@@ -89,7 +98,7 @@ impl UI {
         let biding = self
             .platform
             .context()
-            .tessellate(full_output.shapes, self.scale_factor as f32);
+            .tessellate(full_output.shapes, full_output.pixels_per_point);
 
         let paint_jobs = biding.as_slice();
 
@@ -101,18 +110,19 @@ impl UI {
         let screen_descriptor = ScreenDescriptor {
             physical_width: surface_config.width,
             physical_height: surface_config.height,
-            scale_factor: self.scale_factor as f32,
+            scale_factor: window.scale_factor() as f32,
         };
-        let tdelta: egui::TexturesDelta = full_output.textures_delta as egui::TexturesDelta;
+        let tdelta: egui::TexturesDelta = full_output.textures_delta;
 
-        render_pass
+        self.render_pass
             .add_textures(&device, &queue, &tdelta)
             .expect("add texture ok");
 
-        render_pass.update_buffers(&device, &queue, paint_jobs, &screen_descriptor);
+        self.render_pass
+            .update_buffers(&device, &queue, paint_jobs, &screen_descriptor);
 
         // Record all render passes.
-        match render_pass.execute(
+        match self.render_pass.execute(
             &mut encoder,
             &output_view,
             &paint_jobs,
@@ -130,7 +140,7 @@ impl UI {
         // Redraw egui
         output_frame.present();
 
-        render_pass
+        self.render_pass
             .remove_textures(tdelta)
             .expect("remove texture ok");
     }
